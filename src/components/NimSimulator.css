@@ -1,0 +1,143 @@
+/* ==========================================
+   Simulador Nim — Minimax y Poda Alfa-Beta
+   Styles adapted from the original standalone HTML.
+   ========================================== */
+
+:root {
+  --bg: #0f1115;
+  --panel: #181b22;
+  --text: #e8e8ea;
+  --muted: #9aa0ac;
+  --max: #3b82f6;
+  --min: #ef4444;
+  --term: #b8860b;
+  --pruned: #555;
+  --accent: #10b981;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f6f8;
+    --panel: #fff;
+    --text: #111;
+    --muted: #555;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.nim-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.nim-h1 {
+  font-size: 1.25rem;
+  margin: 0.2em 0 0.6em;
+}
+
+.nim-panel {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.nim-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.nim-btn {
+  background: var(--accent);
+  color: #04231a;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nim-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.nim-btn-secondary {
+  background: #2a2e38;
+  color: var(--text);
+}
+
+.nim-select {
+  background: #2a2e38;
+  color: var(--text);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.nim-info {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.nim-info b {
+  color: var(--text);
+}
+
+#nim-svgwrap {
+  overflow-x: auto;
+  background: var(--panel);
+  border-radius: 12px;
+}
+
+#nim-svgwrap svg {
+  display: block;
+  min-width: 820px;
+}
+
+.nim-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.nim-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+#nim-msg {
+  font-size: 0.9rem;
+  min-height: 1.3em;
+}
+
+#nim-theme-toggle {
+  background: #2a2e38;
+  color: var(--text);
+}
