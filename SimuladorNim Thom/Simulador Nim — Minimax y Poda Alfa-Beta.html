@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador Nim — Minimax y Poda Alfa-Beta</title>
+<style>
+:root{--bg:#0f1115;--panel:#181b22;--text:#e8e8ea;--muted:#9aa0ac;--max:#3b82f6;--min:#ef4444;--term:#b8860b;--pruned:#555;--accent:#10b981;}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f5f6f8;--panel:#fff;--text:#111;--muted:#555;}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;}
+body{padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0);}
+.wrap{max-width:1000px;margin:0 auto;padding:16px;}
+h1{font-size:1.25rem;margin:.2em 0 .6em;}
+.panel{background:var(--panel);border-radius:12px;padding:14px;margin-bottom:12px;}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+button{background:var(--accent);color:#04231a;border:none;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;}
+button:disabled{opacity:.4}
+button.secondary{background:#2a2e38;color:var(--text);}
+select{background:#2a2e38;color:var(--text);border:none;border-radius:8px;padding:8px;}
+.info{display:flex;gap:16px;flex-wrap:wrap;font-size:.88rem;color:var(--muted);margin-top:8px;}
+.info b{color:var(--text)}
+#svgwrap{overflow-x:auto;background:var(--panel);border-radius:12px;}
+svg{display:block;min-width:820px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;}
+#msg{font-size:.9rem;min-height:1.3em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Nim [1,3] — Minimax y Poda Alfa‑Beta</h1>
+<div class="panel controls">
+  <select id="mode">
+    <option value="minimax">Minimax (sin poda)</option>
+    <option value="alphabeta">Alfa‑Beta (con poda)</option>
+  </select>
+  <button id="prevBtn" class="secondary">◀ Anterior</button>
+  <button id="nextBtn">Siguiente ▶</button>
+  <button id="autoBtn" class="secondary">▶ Auto</button>
+  <button id="resetBtn" class="secondary">⟲ Reiniciar</button>
+</div>
+<div class="panel">
+  <div class="info">
+    <span><b>Nodo:</b> <span id="curState">-</span></span>
+    <span><b>Turno:</b> <span id="curPlayer">-</span></span>
+    <span id="abInfo"><b>α:</b> <span id="curA">-</span>&nbsp; <b>β:</b> <span id="curB">-</span></span>
+    <span><b>Paso:</b> <span id="stepNum">0</span>/<span id="stepTotal">0</span></span>
+  </div>
+  <div id="msg"></div>
+</div>
+<div id="svgwrap" class="panel"></div>
+<div class="panel">
+  <div class="legend">
+    <span><span class="dot" style="background:var(--max)"></span>MAX</span>
+    <span><span class="dot" style="background:var(--min)"></span>MIN</span>
+    <span><span class="dot" style="background:var(--term)"></span>Terminal</span>
+    <span><span class="dot" style="background:var(--pruned)"></span>Podado</span>
+  </div>
+</div>
+<div class="panel" id="resultPanel" style="display:none;">
+  <b>Decisión óptima de MAX:</b> <span id="decisionText"></span>
+</div>
+</div>
+<script>
+let nodeId=0;
+function buildTree(state,player,moveDesc,depth){
+  const node={id:nodeId++,state:[...state],player,moveDesc,depth,children:[],terminal:state[0]===0&&state[1]===0};
+  if(node.terminal){ node.value = player==='MAX' ? -1 : 1; return node; }
+  const moves=[];
+  for(let k=1;k<=state[0];k++) moves.push({row:1,amount:k,newState:[state[0]-k,state[1]]});
+  for(let k=1;k<=state[1];k++) moves.push({row:2,amount:k,newState:[state[0],state[1]-k]});
+  const nextPlayer = player==='MAX'?'MIN':'MAX';
+  moves.forEach(m=>{ node.children.push(buildTree(m.newState,nextPlayer,`Fila ${m.row}, retira ${m.amount}`,depth+1)); });
+  return node;
+}
+const tree = buildTree([1,3],'MAX','Inicio',0);
+function minimax(n){
+  if(n.terminal) return n.value;
+  const vals=n.children.map(minimax);
+  n.value = n.player==='MAX'?Math.max(...vals):Math.min(...vals);
+  n.mmChosen = n.children[vals.indexOf(n.value)];
+  return n.value;
+}
+minimax(tree);
+let xCounter=0;
+function layout(n){
+  if(n.children.length===0){ n.x=xCounter++; } else { n.children.forEach(layout); n.x=(n.children[0].x+n.children[n.children.length-1].x)/2; }
+  n.y=n.depth;
+}
+layout(tree);
+const XSPACE=48,YSPACE=88,R=15;
+const px=n=>40+n.x*XSPACE, py=n=>30+n.y*YSPACE;
+function allNodes(n,a=[]){a.push(n); n.children.forEach(c=>allNodes(c,a)); return a;}
+
+function buildEvents(mode){
+  const events=[];
+  function clearPruned(n){n.pruned=false;n.children.forEach(clearPruned);}
+  clearPruned(tree);
+  function markPruned(n){ n.pruned=true; events.push({type:'prunedNode',id:n.id}); n.children.forEach(markPruned); }
+  function ab(n,alpha,beta){
+    events.push({type:'enter',id:n.id,alpha,beta});
+    if(n.terminal){ events.push({type:'leaf',id:n.id,value:n.value}); return n.value; }
+    let value=n.player==='MAX'?-Infinity:Infinity;
+    for(let i=0;i<n.children.length;i++){
+      const c=n.children[i];
+      if(mode==='alphabeta' && alpha>=beta){ events.push({type:'prune',id:c.id,parent:n.id}); markPruned(c); continue; }
+      const v=ab(c,alpha,beta);
+      value=n.player==='MAX'?Math.max(value,v):Math.min(value,v);
+      if(mode==='alphabeta'){ if(n.player==='MAX') alpha=Math.max(alpha,value); else beta=Math.min(beta,value); }
+    }
+    events.push({type:'internal',id:n.id,value,alpha,beta});
+    return value;
+  }
+  ab(tree,-Infinity,Infinity);
+  return events;
+}
+let events=[],step=0,mode='minimax';
+function findNode(id,n=tree){ if(n.id===id) return n; for(const c of n.children){const f=findNode(id,c); if(f) return f;} return null; }
+function svgTree(){
+  const nodes=allNodes(tree);
+  const maxX=Math.max(...nodes.map(px)), maxY=Math.max(...nodes.map(py));
+  let s=`<svg viewBox="0 0 ${maxX+40} ${maxY+30}">`;
+  function edges(n){ n.children.forEach(c=>{ s+=`<line x1="${px(n)}" y1="${py(n)}" x2="${px(c)}" y2="${py(c)}" stroke="#444" stroke-width="1.5" data-edge="${c.id}"/>`; edges(c); }); }
+  edges(tree);
+  function nds(n){
+    s+=`<g data-node="${n.id}"><circle cx="${px(n)}" cy="${py(n)}" r="${R}" fill="#2a2e38" stroke="#555" stroke-width="2"/>`+
+       `<text x="${px(n)}" y="${py(n)+4}" font-size="9.5" text-anchor="middle" fill="#ddd">${n.state[0]},${n.state[1]}</text>`+
+       `<text id="val-${n.id}" x="${px(n)}" y="${py(n)+R+11}" font-size="9" text-anchor="middle" fill="#3ddc84"></text></g>`;
+    n.children.forEach(nds);
+  }
+  nds(tree);
+  return s+'</svg>';
+}
+function resetSim(){ events=buildEvents(mode); step=0; render(); }
+function render(){
+  document.getElementById('svgwrap').innerHTML=svgTree();
+  const svg=document.getElementById('svgwrap').querySelector('svg');
+  let curState='-',curPlayer='-',curA='-',curB='-',msg='';
+  if(step<events.length){
+    const e=events[step], n=findNode(e.id);
+    curState=`(${n.state[0]},${n.state[1]})`; curPlayer=n.player+(n.terminal?' · terminal':'');
+    if(e.type==='enter'){ curA=e.alpha===-Infinity?'-∞':e.alpha; curB=e.beta===Infinity?'∞':e.beta; msg=`Explorando ${curState}, turno de ${n.player}.`; }
+    if(e.type==='leaf'){ msg=`Terminal ${curState}: utilidad = ${e.value>0?'+1 (gana MAX)':'-1 (gana MIN)'}.`; }
+    if(e.type==='internal'){ msg=`Valor propagado en ${curState} (${n.player}): ${e.value>0?'+1':'-1'}.`; }
+    if(e.type==='prune'){ msg=`✂ Poda: la rama hacia (${n.state[0]},${n.state[1]}) no se explora (α ≥ β).`; }
+  }
+  document.getElementById('curState').textContent=curState;
+  document.getElementById('curPlayer').textContent=curPlayer;
+  document.getElementById('curA').textContent=curA;
+  document.getElementById('curB').textContent=curB;
+  document.getElementById('abInfo').style.display=mode==='alphabeta'?'inline':'none';
+  document.getElementById('stepNum').textContent=Math.min(step+1,events.length);
+  document.getElementById('stepTotal').textContent=events.length;
+  document.getElementById('msg').textContent=msg;
+  allNodes(tree).forEach(n=>{
+    const g=svg.querySelector(`[data-node="${n.id}"] circle`);
+    const vt=svg.querySelector(`#val-${n.id}`);
+    if(!g) return;
+    const upto=events.slice(0,step+1);
+    const evEntry=upto.filter(e=>(e.type==='leaf'||e.type==='internal')&&e.id===n.id).pop();
+    const pruned=upto.some(e=>e.type==='prunedNode'&&e.id===n.id);
+    const isCurrent=events[step]&&events[step].id===n.id;
+    if(pruned){ g.setAttribute('fill','#333'); g.setAttribute('stroke','var(--pruned)'); g.setAttribute('stroke-dasharray','3,2'); }
+    else if(isCurrent){ g.setAttribute('fill','#444'); g.setAttribute('stroke','#fff'); g.setAttribute('stroke-width','3'); }
+    else if(evEntry){ g.setAttribute('fill', n.terminal?'#7a5a12':(n.player==='MAX'?'#1e3a63':'#5e2323')); g.setAttribute('stroke','#888'); }
+    if(evEntry && vt) vt.textContent = evEntry.value>0?'+1':(evEntry.value<0?'-1':'');
+  });
+  const done=step>=events.length-1;
+  document.getElementById('resultPanel').style.display=done?'block':'none';
+  if(done){ document.getElementById('decisionText').textContent=`Valor Minimax = ${tree.value>0?'+1':'-1'}. Mejor jugada: ${tree.mmChosen.moveDesc} → estado (${tree.mmChosen.state[0]},${tree.mmChosen.state[1]}).`; }
+  document.getElementById('prevBtn').disabled=step===0;
+  document.getElementById('nextBtn').disabled=step>=events.length-1;
+}
+document.getElementById('nextBtn').onclick=()=>{ if(step<events.length-1){step++;render();} };
+document.getElementById('prevBtn').onclick=()=>{ if(step>0){step--;render();} };
+document.getElementById('resetBtn').onclick=resetSim;
+document.getElementById('mode').onchange=e=>{ mode=e.target.value; resetSim(); };
+let timer=null;
+document.getElementById('autoBtn').onclick=e=>{
+  if(timer){ clearInterval(timer); timer=null; e.target.textContent='▶ Auto'; return; }
+  e.target.textContent='⏸ Pausa';
+  timer=setInterval(()=>{ if(step<events.length-1){step++;render();} else {clearInterval(timer);timer=null;e.target.textContent='▶ Auto';} },650);
+};
+resetSim();
+</script>
+</body>
+</html>

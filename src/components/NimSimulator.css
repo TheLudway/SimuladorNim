@@ -1,0 +1,123 @@
+:root {
+  --bg: #0f1115;
+  --panel: #181b22;
+  --text: #e8e8ea;
+  --muted: #9aa0ac;
+  --max: #3b82f6;
+  --min: #ef4444;
+  --term: #b8860b;
+  --pruned: #737987;
+  --accent: #10b981;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  min-width: 320px;
+}
+
+.nim-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+.nim-hero {
+  align-items: flex-end;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.nim-kicker, .nim-label {
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
+.nim-h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -.05em; line-height: 1; margin: 0; }
+.nim-h1 span { color: var(--accent); }
+.nim-subtitle { color: var(--muted); margin: 10px 0 0; max-width: 580px; }
+.nim-turn-badge { border: 1px solid var(--muted); border-radius: 14px; min-width: 104px; padding: 12px 16px; text-align: center; }
+.nim-turn-badge span { color: var(--muted); display: block; font-size: .72rem; }
+.nim-turn-badge strong { display: block; font-size: 1.25rem; margin-top: 3px; }
+.nim-turn-badge.is-max { border-color: var(--max); color: #93c5fd; }
+.nim-turn-badge.is-min { border-color: var(--min); color: #fca5a5; }
+h2 { font-size: 1rem; margin: 0; }
+
+.nim-panel {
+  background: var(--panel);
+  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  padding: 14px;
+}
+
+.nim-controls {
+  align-items: center;
+  background: color-mix(in srgb, var(--panel) 82%, var(--accent));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.nim-mode-label { color: var(--muted); font-size: .8rem; font-weight: 700; }
+.nim-btn, .nim-btn-secondary { border-radius: 8px; cursor: pointer; font: inherit; padding: 8px 14px; }
+.nim-btn { background: var(--accent); border: none; color: #04231a; font-weight: 600; }
+.nim-btn-secondary { background: #2a2e38; border: 1px solid #3b4250; color: #f4f7fb; }
+.nim-btn:hover:not(:disabled), .nim-btn-secondary:hover:not(:disabled) { filter: brightness(1.12); }
+.nim-btn:disabled, .nim-btn-secondary:disabled { cursor: not-allowed; opacity: .4; }
+.nim-select { background: #2a2e38; border: 1px solid #3b4250; border-radius: 8px; color: #f4f7fb; cursor: pointer; padding: 8px; }
+
+.nim-info { color: var(--muted); display: flex; flex-wrap: wrap; font-size: .88rem; gap: 16px; }
+.nim-info b { color: var(--text); }
+.nim-current-state { border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent); margin-top: 12px; padding-top: 14px; }
+.nim-current-state > div:first-child { align-items: baseline; display: flex; gap: 12px; }
+.nim-current-state strong { font-size: 1.45rem; letter-spacing: .04em; }
+.nim-board { display: grid; gap: 7px; margin: 14px 0; max-width: 530px; }
+.nim-row { align-items: center; display: grid; gap: 10px; grid-template-columns: 58px 1fr 20px; }
+.nim-row > span, .nim-row > b { color: var(--muted); font-size: .78rem; }
+.nim-stones { align-items: center; background: color-mix(in srgb, var(--bg) 72%, var(--panel)); border-radius: 7px; display: flex; gap: 5px; min-height: 25px; padding: 3px 7px; }
+.nim-stones i { background: var(--accent); border-radius: 3px; display: block; height: 18px; width: 7px; }
+.nim-stones em { color: var(--muted); font-size: .72rem; font-style: normal; }
+.nim-message { color: var(--text); font-size: .9rem; min-height: 1.3em; }
+
+.nim-dashboard { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); }
+.nim-section-heading, .nim-tree-heading { align-items: center; display: flex; gap: 12px; justify-content: space-between; }
+.nim-section-heading { margin-bottom: 12px; }
+.nim-count, .nim-mode-chip { background: color-mix(in srgb, var(--accent) 17%, transparent); border-radius: 99px; color: var(--accent); font-size: .75rem; font-weight: 800; padding: 5px 9px; }
+.nim-move-list { display: grid; gap: 6px; }
+.nim-move { align-items: center; background: color-mix(in srgb, var(--bg) 70%, var(--panel)); border-radius: 7px; display: grid; gap: 9px; grid-template-columns: 20px 1fr auto; padding: 8px 10px; }
+.nim-move > span:nth-child(2) { font-size: .82rem; }
+.nim-move small { color: var(--muted); display: inline; margin-left: 7px; }
+.nim-move b { color: var(--accent); font-size: .72rem; text-transform: uppercase; }
+.nim-move-order { color: var(--accent); font-weight: 900; }
+.nim-move.is-pruned { opacity: .6; }
+.nim-move.is-pruned .nim-move-order, .nim-move.is-pruned b { color: var(--pruned); }
+.nim-empty, .nim-metric-note { color: var(--muted); font-size: .84rem; margin: 0; }
+.nim-stat-grid { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
+.nim-stat-grid div { background: color-mix(in srgb, var(--bg) 70%, var(--panel)); border-radius: 8px; padding: 10px 8px; text-align: center; }
+.nim-stat-grid strong { display: block; font-size: 1.35rem; }
+.nim-stat-grid span { color: var(--muted); display: block; font-size: .68rem; margin-top: 3px; }
+.nim-stat-grid small { color: var(--accent); display: block; font-size: .65rem; margin-top: 5px; }
+.nim-metric-note { margin-top: 13px; }
+
+#nim-svgwrap { background: var(--panel); border-radius: 12px; overflow-x: auto; }
+#nim-svgwrap svg { display: block; min-width: 820px; }
+.nim-tree-heading { color: var(--muted); font-size: .74rem; margin-bottom: 10px; }
+.nim-tree-heading h2 { color: var(--text); }
+.nim-tree-heading span { text-align: right; }
+.nim-legend { color: var(--muted); display: flex; flex-wrap: wrap; font-size: .82rem; gap: 14px; }
+.nim-dot { border-radius: 50%; display: inline-block; height: 10px; margin-right: 4px; width: 10px; }
+@media (max-width: 700px) {
+  .nim-wrap { padding: 20px 12px 32px; }
+  .nim-hero { align-items: flex-start; flex-direction: column; }
+  .nim-turn-badge { align-self: stretch; }
+  .nim-dashboard { grid-template-columns: 1fr; }
+  .nim-tree-heading { align-items: flex-start; flex-direction: column; }
+  .nim-tree-heading span { text-align: left; }
+}
