@@ -57,7 +57,13 @@ export function buildEvents(
 
       // Pruning check (alpha-beta only)
       if (mode === "alphabeta" && alpha >= beta) {
-        events.push({ type: "prune", id: child.id, parent: node.id });
+        events.push({
+          type: "prune",
+          id: child.id,
+          parent: node.id,
+          alpha,
+          beta,
+        });
         markPruned(child, events);
         continue;
       }

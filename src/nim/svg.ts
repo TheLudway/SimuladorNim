@@ -50,18 +50,21 @@ export function svgTreeWithState(
   }
 
   let svg = `<svg viewBox="0 0 ${maxX + 40} ${maxY + 30}" data-tree="true">`;
+  const upto = step < events.length ? events.slice(0, step + 1) : events;
+  const currentId = step < events.length ? events[step]?.id : undefined;
+  const prunedIds = new Set(
+    upto.filter((event) => event.type === "prunedNode").map((event) => event.id),
+  );
 
   // --- edges ---
   for (const n of nodes) {
     for (const c of n.children) {
-      svg += `<line x1="${px(n)}" y1="${py(n)}" x2="${px(c)}" y2="${py(c)}" stroke="#444" stroke-width="1.5" data-edge="${c.id}"/>`;
+      const isPruned = prunedIds.has(c.id);
+      svg += `<line x1="${px(n)}" y1="${py(n)}" x2="${px(c)}" y2="${py(c)}" stroke="${isPruned ? "#626774" : "#444"}" stroke-width="${isPruned ? "2.5" : "1.5"}" stroke-opacity="${isPruned ? "0.65" : "0.8"}"${isPruned ? ' stroke-dasharray="5,4"' : ""} data-edge="${c.id}" data-pruned="${isPruned}"/>`;
     }
   }
 
   // --- nodes ---
-  const upto = step < events.length ? events.slice(0, step + 1) : events;
-  const currentId = step < events.length ? events[step]?.id : undefined;
-
   for (const n of nodes) {
     const evEntry = upto
       .filter((e) => (e.type === "leaf" || e.type === "internal") && e.id === n.id)
@@ -84,6 +87,7 @@ export function svgTreeWithState(
     svg += `<g data-node="${n.id}">` +
       `<circle cx="${px(n)}" cy="${py(n)}" r="${R}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dashAttr}/>` +
       `<text x="${px(n)}" y="${py(n) + 4}" font-size="9.5" text-anchor="middle" fill="#ddd">${n.state[0]},${n.state[1]}</text>` +
+      `<text x="${px(n)}" y="${py(n) - R - 4}" font-size="8" text-anchor="middle" fill="${n.player === "MAX" ? "#93c5fd" : "#fca5a5"}">${n.terminal ? "TERMINAL" : n.player}</text>` +
       `<text id="val-${n.id}" x="${px(n)}" y="${py(n) + R + 11}" font-size="9" text-anchor="middle" fill="#3ddc84">${valText}</text>` +
       `</g>`;
   }
@@ -173,11 +177,15 @@ export function getRenderInfo(
         message = `Terminal ${state}: utilidad = ${util}.`;
       }
       if (e.type === "internal") {
+        alpha = e.alpha === -Infinity ? "-∞" : String(e.alpha);
+        beta = e.beta === Infinity ? "∞" : String(e.beta);
         const val =
           e.value !== undefined && e.value > 0 ? "+1" : "-1";
         message = `Valor propagado en ${state} (${n.player}): ${val}.`;
       }
       if (e.type === "prune") {
+        alpha = e.alpha === -Infinity ? "-∞" : String(e.alpha);
+        beta = e.beta === Infinity ? "∞" : String(e.beta);
         message = `✂ Poda: la rama hacia (${n.state[0]},${n.state[1]}) no se explora (α ≥ β).`;
       }
     }
